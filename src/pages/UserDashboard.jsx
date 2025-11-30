@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Navigate, Link } from "react-router-dom";
 import { ShoppingCart, Heart, Package, Bell } from "lucide-react";
 import API from "../utils/api";
-import ProductList from "../components/user/productlist";
+import ProductList from "../components/user/ProductList";
 import UserHeader from "../components/user/Header";
 
 export default function UserDashboard({ user }) {
