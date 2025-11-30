@@ -38,7 +38,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 # ------------------ Initialize Extensions ------------------
 db.init_app(app)
 CORS(app, resources={r"/api/*": {
-    "origins": ["http://localhost:5173"],
+    "origins": ["https://ramstoress.netlify.app"],
     "methods": ["GET", "POST", "PUT", "DELETE","OPTIONS"],
     "allow_headers": ["Authorization", "Content-Type"]
 }})
@@ -78,7 +78,8 @@ app.register_blueprint(review_bp, url_prefix='/api/reviews')
 app.register_blueprint(carousel_bp,url_prefix='/api/carousel')
 
 
-# ------------------ Run Application ------------------
 if __name__ == "__main__":
     initialize_app()
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))  # Render assigns a PORT
+    app.run(host="0.0.0.0", port=port, debug=True)
+

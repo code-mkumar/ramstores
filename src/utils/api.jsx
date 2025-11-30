@@ -4,7 +4,7 @@ import axios from 'axios';
 export const baseAPI = "https://ramstoresbackend.onrender.com";
 
 const API = axios.create({
-  baseURL: 'https://ramstoresbackend.onrender.com',
+  baseURL: 'https://ramstoresbackend.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
