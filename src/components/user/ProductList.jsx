@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Filter, Grid, List } from "lucide-react";
 import API from "../../utils/api";
-import ProductCard from "./productcard";
+import ProductCard from "./ProductCard";
 
 export default function ProductList({ onAddToCart, onAddToWishlist }) {
   const [products, setProducts] = useState([]);
