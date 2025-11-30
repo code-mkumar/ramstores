@@ -1,10 +1,10 @@
 // utils/api.js
 import axios from 'axios';
 
-export const baseAPI = "http://localhost:5000";
+export const baseAPI = "https://ramstoresbackend.onrender.com";
 
 const API = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: 'https://ramstoresbackend.onrender.com',
   headers: {
     'Content-Type': 'application/json',
   },
