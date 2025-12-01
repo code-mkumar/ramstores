@@ -154,30 +154,27 @@ const OrdersManagement = () => {
       return;
     }
 
+    // decode base64 → download PDF
     const pdfBase64 = res.data.pdf;
-    const fileName = res.data.filename;
-
-    // Convert base64 to file blob
     const byteCharacters = atob(pdfBase64);
-    const byteNumbers = new Array(byteCharacters.length)
-      .fill(0)
-      .map((_, i) => byteCharacters.charCodeAt(i));
-
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: "application/pdf" });
+    const byteNumbers = Array.from(byteCharacters, c => c.charCodeAt(0));
+    const blob = new Blob([new Uint8Array(byteNumbers)], { type: "application/pdf" });
 
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = fileName;
+    link.download = res.data.filename;
     link.click();
 
-    fetchOrders(); // refresh UI
+    // refresh orders AFTER backend commits
+    setTimeout(() => fetchOrders(), 500);
+
   } catch (err) {
     console.error(err);
-    alert("Failed to confirm orders");
+    alert("Error confirming orders");
   }
 };
+
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
