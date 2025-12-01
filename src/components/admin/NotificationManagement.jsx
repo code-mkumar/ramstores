@@ -123,6 +123,8 @@ try {
 
 };
 
+console.log(notifications);
+
 return ( <div> <h3 className="mb-4">Notifications Management</h3>
 <button className="btn btn-primary mb-3" onClick={() => setShowModal(true)}>
 + Add Notification </button>
