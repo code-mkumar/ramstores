@@ -146,24 +146,29 @@ const OrdersManagement = () => {
 
     const response = await API.post(
       "/admin/orders/confirm-all",
-      {}, // empty body
-      {
-        responseType: "blob",
-        headers: { Authorization: `Bearer ${token}` }
-      }
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    // Trigger PDF download
-    const url = window.URL.createObjectURL(new Blob([response.data]));
+    // Decode base64 and download
+    const byteCharacters = atob(response.data.pdf);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'application/pdf' });
+    
+    const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", "all_orders_bill.pdf");
+    link.setAttribute("download", response.data.filename);
     document.body.appendChild(link);
     link.click();
-    link.remove(); // cleanup
+    link.remove();
 
     alert("Orders confirmed successfully!");
-    fetchOrders(); // refresh UI
+    fetchOrders();
 
   } catch (err) {
     console.error(err);
