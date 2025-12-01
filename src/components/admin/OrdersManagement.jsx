@@ -146,7 +146,6 @@ const OrdersManagement = () => {
 
     const response = await API.post(
       "/admin/orders/confirm-all",
-      {},
       {
         responseType: "blob",
         headers: { Authorization: `Bearer ${token}` }
