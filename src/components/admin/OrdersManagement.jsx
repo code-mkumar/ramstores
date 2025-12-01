@@ -142,37 +142,40 @@ const OrdersManagement = () => {
   const handleConfirmAll = async () => {
   try {
     const token = getToken();
-    if (!token) return alert("Unauthorized");
 
-    const response = await API.post(
+    const res = await API.post(
       "/admin/orders/confirm-all",
       {},
       { headers: { Authorization: `Bearer ${token}` } }
     );
 
-    // Decode base64 and download
-    const byteCharacters = atob(response.data.pdf);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    if (!res.data.success) {
+      alert(res.data.message);
+      return;
     }
+
+    const pdfBase64 = res.data.pdf;
+    const fileName = res.data.filename;
+
+    // Convert base64 to file blob
+    const byteCharacters = atob(pdfBase64);
+    const byteNumbers = new Array(byteCharacters.length)
+      .fill(0)
+      .map((_, i) => byteCharacters.charCodeAt(i));
+
     const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'application/pdf' });
-    
-    const url = window.URL.createObjectURL(blob);
+    const blob = new Blob([byteArray], { type: "application/pdf" });
+
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", response.data.filename);
-    document.body.appendChild(link);
+    link.download = fileName;
     link.click();
-    link.remove();
 
-    alert("Orders confirmed successfully!");
-    fetchOrders();
-
+    fetchOrders(); // refresh UI
   } catch (err) {
     console.error(err);
-    alert(err.response?.data?.message || "Error confirming orders");
+    alert("Failed to confirm orders");
   }
 };
 

@@ -452,18 +452,17 @@ def delete_product(product_id):
 
 
 
-@admin_bp.route('/orders/confirm-all', methods=['POST', 'OPTIONS'])
-@jwt_required(optional=True)
+import io
+import base64
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+
+@admin_bp.route('/orders/confirm-all', methods=['POST'])
+@jwt_required()
 def confirm_all_orders():
-    # Handle preflight OPTIONS request
-    if request.method == 'OPTIONS':
-        response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'POST,OPTIONS')
-        return response, 200
-    
+
     try:
+        # Admin validation
         current_user_id = get_jwt_identity()
         user = User.query.get(current_user_id)
 
@@ -471,16 +470,14 @@ def confirm_all_orders():
             return jsonify({'success': False, 'message': 'Admin access required'}), 403
 
         pending_orders = Order.query.filter_by(status="Pending").all()
-
         if len(pending_orders) == 0:
-            return jsonify({'success': False, 'message': 'No pending orders'}), 400
+            return jsonify({'success': True, 'message': 'No pending orders'}), 400
 
-        # PDF BUFFER
+        # Create PDF
         pdf_buffer = io.BytesIO()
         pdf = canvas.Canvas(pdf_buffer, pagesize=A4)
 
         for order in pending_orders:
-            # ----------- Bill Page Layout ------------
             pdf.setFont("Helvetica-Bold", 20)
             pdf.drawString(200, 800, "RAM STORES")
 
@@ -510,10 +507,7 @@ def confirm_all_orders():
             pdf.setFont("Helvetica-Bold", 14)
             pdf.drawString(50, y - 40, f"Grand Total: ₹{order.total_amount}")
 
-            # Finish page
             pdf.showPage()
-
-            # Update status
             order.status = "Confirmed"
 
         db.session.commit()
@@ -521,22 +515,20 @@ def confirm_all_orders():
         pdf.save()
         pdf_buffer.seek(0)
 
-        # Encode PDF to base64
+        # Base64 encode PDF
         pdf_base64 = base64.b64encode(pdf_buffer.read()).decode('utf-8')
-    
+
         response = jsonify({
             'success': True,
             'pdf': pdf_base64,
             'filename': 'all_orders_bill.pdf'
         })
-        
-        # Add CORS headers
-        response.headers.add('Access-Control-Allow-Origin', '*')
         return response
 
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
+
 
 # ==================== ORDER MANAGEMENT ====================
 @admin_bp.route('/orders', methods=['GET'])
@@ -1250,28 +1242,33 @@ def get_all_notifications():
             return jsonify({'success': False, 'message': 'Admin access required'}), 403
 
         notifications = (
-            db.session.query(Notification, User)
-            .join(User, Notification.user_id == User.id)
+            db.session.query(Notification)
             .order_by(Notification.created_at.desc())
             .all()
         )
 
-        notifications_data = [
-            {
+        notifications_data = []
+        for n in notifications:
+            # If sent to all users
+            if n.user_id is None:
+                username = "All Users"
+            else:
+                u = User.query.get(n.user_id)
+                username = u.username if u else "Unknown User"
+
+            notifications_data.append({
                 'id': n.id,
-                'username': u.username,   
+                'username': username,
                 'title': n.title,
                 'message': n.message,
                 'is_read': n.is_read,
                 'created_at': n.created_at.isoformat()
-            }
-            for n, u in notifications
-        ]
+            })
+
         return jsonify({'success': True, 'notifications': notifications_data}), 200
 
     except Exception as e:
         return jsonify({'success': False, 'message': str(e)}), 500
-
 
 # ------------------ Update notification (mark as read/unread) ------------------
 @admin_bp.route('/notifications/<int:id>', methods=['PUT'])
