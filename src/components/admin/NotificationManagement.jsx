@@ -33,6 +33,7 @@ if (!token) return;
   const res = await API.get("/admin/notifications", {
     headers: { Authorization: `Bearer ${token}` },
   });
+  console.log(res.data.notifications);
 
   if (res.data.success && Array.isArray(res.data.notifications)) {
     setNotifications(res.data.notifications);
