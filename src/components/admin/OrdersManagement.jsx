@@ -139,6 +139,35 @@ const OrdersManagement = () => {
       }
     }
   };
+  const handleConfirmAll = async () => {
+  try {
+    const token = getToken();
+    if (!token) return alert("Unauthorized");
+
+    const response = await API.post(
+      "/admin/orders/confirm-all",
+      {},
+      {
+        responseType: "blob",
+        headers: { Authorization: `Bearer ${token}` }
+      }
+    );
+
+    // Trigger PDF download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "all_orders_bill.pdf");
+    document.body.appendChild(link);
+    link.click();
+
+    fetchOrders(); // refresh UI
+
+  } catch (err) {
+    console.error(err);
+    alert("Error confirming orders");
+  }
+};
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -208,7 +237,7 @@ const OrdersManagement = () => {
           <table className="table table-sm mb-0">
             <thead className="table-light">
               <tr>
-                <th>Product ID</th>
+                <th>Product Name</th>
                 <th>Quantity</th>
                 <th>Unit Price</th>
                 <th>Total</th>
@@ -217,7 +246,7 @@ const OrdersManagement = () => {
             <tbody>
               {order.items?.map((item, idx) => (
                 <tr key={idx}>
-                  <td>{item.product_id}</td>
+                  <td>{item.product_name}</td>
                   <td>{item.quantity}</td>
                   <td>₹{item.unit_price}</td>
                   <td>₹{item.total_price}</td>
@@ -235,6 +264,13 @@ const OrdersManagement = () => {
       {error && <div className="alert alert-danger">{error}</div>}
       <div className="d-flex justify-content-between mb-4">
         <h3>Orders Management</h3>
+        <button 
+          className="btn btn-primary mb-3"
+          onClick={handleConfirmAll}
+        >
+          Confirm All Pending Orders & Download PDF
+        </button>
+
       </div>
       <div className="card mb-4">
         <div className="card-body">

@@ -132,12 +132,12 @@ return ( <div> <h3 className="mb-4">Notifications Management</h3>
   {loading ? (
     <div>Loading...</div>
   ) : (
-    <div className="table-responsive">
+    <div className="table-responsive" style={{ overflowX: "auto",overflowY :"auto" }}>
       <table className="table table-hover">
         <thead className="table-dark">
           <tr>
             <th>ID</th>
-            <th>User ID</th>
+            <th>User Name</th>
             <th>Title</th>
             <th>Message</th>
             <th>Read</th>
@@ -156,7 +156,7 @@ return ( <div> <h3 className="mb-4">Notifications Management</h3>
             notifications.map((n) => (
               <tr key={n.id} className={n.is_read ? "" : "table-warning"}>
                 <td>{n.id}</td>
-                <td>{n.user_id}</td>
+                <td>{n.username}</td>
                 <td>{n.title}</td>
                 <td>{n.message}</td>
                 <td>

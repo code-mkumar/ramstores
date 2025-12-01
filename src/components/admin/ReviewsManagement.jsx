@@ -207,7 +207,7 @@ const ReviewsManagement = () => {
     <thead className="table-dark">
       <tr>
         <th onClick={() => handleSort('id')} style={{ cursor: 'pointer' }}>ID</th>
-        <th onClick={() => handleSort('user_id')} style={{ cursor: 'pointer' }}>User ID</th>
+        <th onClick={() => handleSort('user_name')} style={{ cursor: 'pointer' }}>User Name</th>
         <th onClick={() => handleSort('product_id')} style={{ cursor: 'pointer' }}>Product ID</th>
         <th onClick={() => handleSort('rating')} style={{ cursor: 'pointer' }}>Rating</th>
         <th>Comment</th>
@@ -240,7 +240,7 @@ const ReviewsManagement = () => {
                 {paginatedData().map(review => (
                   <tr key={review.id}>
                     <td>{review.id}</td>
-                    <td>{review.user_id}</td>
+                    <td>{review.user_name}</td>
                     <td>{review.product_id}</td>
                     <td>
                       <span className="text-warning">
