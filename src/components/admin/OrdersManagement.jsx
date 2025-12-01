@@ -146,6 +146,7 @@ const OrdersManagement = () => {
 
     const response = await API.post(
       "/admin/orders/confirm-all",
+      {}, // empty body
       {
         responseType: "blob",
         headers: { Authorization: `Bearer ${token}` }
@@ -159,12 +160,14 @@ const OrdersManagement = () => {
     link.setAttribute("download", "all_orders_bill.pdf");
     document.body.appendChild(link);
     link.click();
+    link.remove(); // cleanup
 
+    alert("Orders confirmed successfully!");
     fetchOrders(); // refresh UI
 
   } catch (err) {
     console.error(err);
-    alert("Error confirming orders");
+    alert(err.response?.data?.message || "Error confirming orders");
   }
 };
 
