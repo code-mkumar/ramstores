@@ -19,7 +19,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min.js";
 // Protected Route Component
 const ProtectedRoute = ({ children, user, allowedRoles }) => {
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login"  />;
   }
   
   if (allowedRoles && !allowedRoles.includes(user.role)) {
@@ -28,7 +28,7 @@ const ProtectedRoute = ({ children, user, allowedRoles }) => {
       user.role === 'admin' ? '/admin' :
       user.role === 'seller' ? '/seller' :
       user.role === 'user' ? '/dashboard' : '/';
-    return <Navigate to={redirectPath} replace />;
+    return <Navigate to={redirectPath}  />;
   }
   
   return children;
@@ -94,11 +94,11 @@ function App() {
         <Route path="/" element={<InfoPage />} />
         <Route
           path="/login"
-          element={!user ? <Login setUser={setUser} /> : <Navigate to="/dashboard" replace />}
+          element={!user ? <Login setUser={setUser} /> : <Navigate to="/dashboard"  />}
         />
         <Route
           path="/register"
-          element={!user ? <Register setUser={setUser} /> : <Navigate to="/dashboard" replace />}
+          element={!user ? <Register setUser={setUser} /> : <Navigate to="/dashboard"  />}
         />
         <Route path="/forgetpass" element={<ForgotPassword />} />
 

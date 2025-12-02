@@ -342,7 +342,7 @@ export default function Login({ setUser }) {
                     <GoogleLogin
                       onSuccess={handleGoogleSuccess}
                       onError={handleGoogleError}
-                      useOneTap
+                      
                       disabled={loading}
                     />
                   </div>
