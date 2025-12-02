@@ -1,11 +1,13 @@
 // pages/Login.jsx
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate,Link } from 'react-router-dom';
 import API from '../utils/api';
 import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
 import { GoogleLogin } from "@react-oauth/google";
 
-export default function Login({ setUser }) {
+
+
+export default function Login() {
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -14,15 +16,12 @@ export default function Login({ setUser }) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
-  console.log("LOGIN RENDERED");
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
-    // Clear error when user starts typing
-    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -32,104 +31,44 @@ export default function Login({ setUser }) {
 
     try {
       const response = await API.post('/auth/login', formData);
-      console.log('Login response:', response.data);
+      console.log('Full login response:', response);
+      console.log('Response data:', response.data);
       
       if (response.data.success) {
-        const token = response.data.access_token || response.data.token;
+        console.log('Login successful, storing data...');
+        
+        // Store user data and token
         const userData = {
           ...response.data.user,
-          token: token
+          token: response.data.access_token || response.data.token
         };
         
-        console.log('Storing token:', token);
-        console.log('User data:', userData);
+        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('token', userData.token);
         
-        // Store credentials in sessionStorage
-        sessionStorage.setItem('user', JSON.stringify(userData));
-        sessionStorage.setItem('token', token);
+        console.log('Stored user:', userData);
+        console.log('Stored token:', userData.token);
         
-        // Update App state
-        setUser(userData);
-        
-        console.log('Navigation to:', userData.role);
-        
-        // Navigate immediately
-        const path = 
-          userData.role === 'admin' ? '/admin' :
-          userData.role === 'seller' ? '/seller' :
-          userData.role === 'user' ? '/dashboard' : '/';
-        
-        navigate(path, { replace: true });
+        // Navigate based on role
+        if (userData.role === 'admin') {
+          navigate('/admin');
+        } 
+        else if(userData.role === 'user'){
+          navigate('/dashboard');
+        }
+        else {
+          navigate('/');
+        }
       }
     } catch (err) {
       console.error('Login error:', err);
-      console.error('Error response:', err.response?.data);
       setError(
         err.response?.data?.message || 
-        err.response?.data?.msg ||
         'Login failed. Please check your credentials.'
       );
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleGoogleSuccess = async (credentialResponse) => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const googleToken = credentialResponse.credential;
-      console.log('Google token received, length:', googleToken?.length);
-      
-      const response = await API.post("/auth/google-login", { token: googleToken });
-      console.log('Google login response:', response.data);
-
-      if (response.data.success) {
-        const token = response.data.access_token || response.data.token;
-        const userData = {
-          ...response.data.user,
-          token: token
-        };
-
-        console.log('Storing Google user token:', token);
-        console.log('Google user data:', userData);
-
-        // Store credentials in sessionStorage
-        sessionStorage.setItem("user", JSON.stringify(userData));
-        sessionStorage.setItem("token", token);
-
-        // Update App state
-        setUser(userData);
-
-        console.log('Google login - Navigating to:', userData.role);
-
-        // Navigate immediately
-        const path = 
-          userData.role === 'admin' ? '/admin' :
-          userData.role === 'seller' ? '/seller' :
-          userData.role === 'user' ? '/dashboard' : '/';
-        
-        navigate(path, { replace: true });
-      } else {
-        setError('Google login failed. Please try again.');
-      }
-    } catch (err) {
-      console.error('Google login error:', err);
-      console.error('Google error response:', err.response?.data);
-      setError(
-        err.response?.data?.message ||
-        err.response?.data?.msg ||
-        'Google login failed. Please try again.'
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleGoogleError = () => {
-    console.error("Google Login Failed");
-    setError('Google login was cancelled or failed.');
   };
 
   return (
@@ -192,7 +131,7 @@ export default function Login({ setUser }) {
                          background: 'rgba(220, 53, 69, 0.1)',
                          color: '#dc3545'
                        }}>
-                    <AlertCircle size={20} className="me-2 flex-shrink-0" />
+                    <AlertCircle size={20} className="me-2" />
                     <span>{error}</span>
                   </div>
                 )}
@@ -216,7 +155,6 @@ export default function Login({ setUser }) {
                         value={formData.username}
                         onChange={handleChange}
                         required
-                        disabled={loading}
                         style={{ 
                           borderRadius: '12px',
                           background: '#f7fafc',
@@ -247,7 +185,6 @@ export default function Login({ setUser }) {
                         value={formData.password}
                         onChange={handleChange}
                         required
-                        disabled={loading}
                         style={{ 
                           borderRadius: '12px',
                           background: '#f7fafc',
@@ -261,7 +198,6 @@ export default function Login({ setUser }) {
                         type="button"
                         className="btn position-absolute top-50 translate-middle-y end-0 me-2 p-0"
                         onClick={() => setShowPassword(!showPassword)}
-                        disabled={loading}
                         style={{ 
                           border: 'none',
                           background: 'transparent',
@@ -280,21 +216,20 @@ export default function Login({ setUser }) {
                         className="form-check-input" 
                         type="checkbox" 
                         id="remember"
-                        disabled={loading}
                         style={{ cursor: 'pointer' }}
                       />
                       <label className="form-check-label" htmlFor="remember" style={{ color: '#718096', cursor: 'pointer' }}>
                         Remember me
                       </label>
                     </div>
-                    <Link to="/forgetpass" className="text-decoration-none" 
+                    <a href="/forgetpass" className="text-decoration-none" 
                        style={{ 
                          color: '#667eea',
                          fontWeight: '500',
                          fontSize: '14px'
                        }}>
                       Forgot password?
-                    </Link>
+                    </a>
                   </div>
 
                   {/* Login Button */}
@@ -328,25 +263,34 @@ export default function Login({ setUser }) {
                       </>
                     ) : 'Login'}
                   </button>
-
-                  {/* Divider */}
-                  <div className="position-relative my-4">
-                    <hr style={{ borderColor: '#e2e8f0' }} />
-                    <span className="position-absolute top-50 start-50 translate-middle px-3" 
-                          style={{ background: 'rgba(255, 255, 255, 0.95)', color: '#718096', fontSize: '14px' }}>
-                      Or continue with
-                    </span>
-                  </div>
-
-                  {/* Google Login */}
-                  <div className="d-flex justify-content-center">
+                  <div className="mt-3">
                     <GoogleLogin
-                      onSuccess={handleGoogleSuccess}
-                      onError={handleGoogleError}
-                      
-                      disabled={loading}
+                    clientId="369885088133-j9n7d76p6aukqljpb76fpsfu68bq76mj.apps.googleusercontent.com"
+                      onSuccess={async (credentialResponse) => {
+                        const token = credentialResponse.credential; // Google token
+
+                        const response = await API.post("/auth/google-login", { token });
+
+                        if (response.data.success) {
+                          const userData = {
+                            ...response.data.user,
+                            token: response.data.access_token
+                          };
+
+                          localStorage.setItem("user", JSON.stringify(userData));
+                          localStorage.setItem("token", userData.token);
+
+                          if (userData.role === "admin") navigate("/admin");
+                          else if(userData.role === "user") navigate("/dashboard");
+                          else navigate("/");
+                        }
+                      }}
+                      onError={() => {
+                        console.log("Google Login Failed");
+                      }}
                     />
                   </div>
+
                 </form>
 
                 {/* Sign Up Link */}
