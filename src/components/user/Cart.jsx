@@ -77,7 +77,7 @@ export default function Cart({ user }) {
 
     if (!user.phone || !user.address) {
     alert("Please complete your phone number and address before placing an order.");
-    return <Navigate to="/profile" replace />; // redirect to profile
+    return <Navigate to="/profile" />; // redirect to profile
   }
 
     setLoading(true);
