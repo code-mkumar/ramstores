@@ -14,6 +14,7 @@ export default function Login({ setUser }) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  console.log("LOGIN RENDERED");
 
   const handleChange = (e) => {
     setFormData({
