@@ -281,6 +281,7 @@ export default function Login() {
                           localStorage.setItem("token", userData.token);
 
                           if (userData.role === "admin") navigate("/admin");
+                          else if(userData.role === "user") navigate("/dashboard");
                           else navigate("/");
                         }
                       }}
