@@ -177,8 +177,8 @@ const handleConfirmAll = async () => {
       const tableData = order.items.map(item => [
         item.product,
         item.quantity,
-        "₹" + item.unit_price,
-        "₹" + item.total_price
+        "Rs. " + item.unit_price,
+        "Rs. " + item.total_price
       ]);
 
       autoTable(pdf, {
@@ -187,7 +187,7 @@ const handleConfirmAll = async () => {
         body: tableData
       });
 
-      pdf.text(`Grand Total: ₹${order.total_amount}`, 10, pdf.lastAutoTable.finalY + 10);
+      pdf.text(`Grand Total: Rs. ${order.total_amount}`, 10, pdf.lastAutoTable.finalY + 10);
 
       if (index < orders.length - 1) {
         pdf.addPage();
