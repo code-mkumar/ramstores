@@ -1,13 +1,11 @@
 // pages/Login.jsx
 import React, { useState } from 'react';
-import { useNavigate,Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import API from '../utils/api';
 import { Eye, EyeOff, Lock, User, AlertCircle } from 'lucide-react';
 import { GoogleLogin } from "@react-oauth/google";
 
-
-
-export default function Login() {
+export default function Login({ setUser }) {
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -32,32 +30,33 @@ export default function Login() {
     try {
       const response = await API.post('/auth/login', formData);
       console.log('Full login response:', response);
-      console.log('Response data:', response.data);
       
       if (response.data.success) {
         console.log('Login successful, storing data...');
         
-        // Store user data and token
         const userData = {
           ...response.data.user,
           token: response.data.access_token || response.data.token
         };
         
-        localStorage.setItem('user', JSON.stringify(userData));
-        localStorage.setItem('token', userData.token);
+        // Store in sessionStorage
+        sessionStorage.setItem('user', JSON.stringify(userData));
+        sessionStorage.setItem('token', userData.token);
         
-        console.log('Stored user:', userData);
-        console.log('Stored token:', userData.token);
+        // Update App state
+        setUser(userData);
+        
+        console.log('User authenticated:', userData);
         
         // Navigate based on role
         if (userData.role === 'admin') {
-          navigate('/admin');
-        } 
-        else if(userData.role === 'user'){
-          navigate('/dashboard');
-        }
-        else {
-          navigate('/');
+          navigate('/admin', { replace: true });
+        } else if (userData.role === 'seller') {
+          navigate('/seller', { replace: true });
+        } else if (userData.role === 'user') {
+          navigate('/dashboard', { replace: true });
+        } else {
+          navigate('/', { replace: true });
         }
       }
     } catch (err) {
@@ -66,6 +65,46 @@ export default function Login() {
         err.response?.data?.message || 
         'Login failed. Please check your credentials.'
       );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const token = credentialResponse.credential;
+      const response = await API.post("/auth/google-login", { token });
+
+      if (response.data.success) {
+        const userData = {
+          ...response.data.user,
+          token: response.data.access_token
+        };
+
+        // Store in sessionStorage
+        sessionStorage.setItem("user", JSON.stringify(userData));
+        sessionStorage.setItem("token", userData.token);
+
+        // Update App state
+        setUser(userData);
+
+        // Navigate based on role
+        if (userData.role === "admin") {
+          navigate("/admin", { replace: true });
+        } else if (userData.role === "seller") {
+          navigate("/seller", { replace: true });
+        } else if (userData.role === "user") {
+          navigate("/dashboard", { replace: true });
+        } else {
+          navigate("/", { replace: true });
+        }
+      }
+    } catch (err) {
+      console.error('Google login error:', err);
+      setError('Google login failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -155,6 +194,7 @@ export default function Login() {
                         value={formData.username}
                         onChange={handleChange}
                         required
+                        disabled={loading}
                         style={{ 
                           borderRadius: '12px',
                           background: '#f7fafc',
@@ -185,6 +225,7 @@ export default function Login() {
                         value={formData.password}
                         onChange={handleChange}
                         required
+                        disabled={loading}
                         style={{ 
                           borderRadius: '12px',
                           background: '#f7fafc',
@@ -198,6 +239,7 @@ export default function Login() {
                         type="button"
                         className="btn position-absolute top-50 translate-middle-y end-0 me-2 p-0"
                         onClick={() => setShowPassword(!showPassword)}
+                        disabled={loading}
                         style={{ 
                           border: 'none',
                           background: 'transparent',
@@ -216,20 +258,21 @@ export default function Login() {
                         className="form-check-input" 
                         type="checkbox" 
                         id="remember"
+                        disabled={loading}
                         style={{ cursor: 'pointer' }}
                       />
                       <label className="form-check-label" htmlFor="remember" style={{ color: '#718096', cursor: 'pointer' }}>
                         Remember me
                       </label>
                     </div>
-                    <a href="/forgetpass" className="text-decoration-none" 
+                    <Link to="/forgetpass" className="text-decoration-none" 
                        style={{ 
                          color: '#667eea',
                          fontWeight: '500',
                          fontSize: '14px'
                        }}>
                       Forgot password?
-                    </a>
+                    </Link>
                   </div>
 
                   {/* Login Button */}
@@ -263,34 +306,18 @@ export default function Login() {
                       </>
                     ) : 'Login'}
                   </button>
-                  <div className="mt-3">
+
+                  {/* Google Login */}
+                  <div className="mt-3 d-flex justify-content-center">
                     <GoogleLogin
-                    clientId="369885088133-j9n7d76p6aukqljpb76fpsfu68bq76mj.apps.googleusercontent.com"
-                      onSuccess={async (credentialResponse) => {
-                        const token = credentialResponse.credential; // Google token
-
-                        const response = await API.post("/auth/google-login", { token });
-
-                        if (response.data.success) {
-                          const userData = {
-                            ...response.data.user,
-                            token: response.data.access_token
-                          };
-
-                          localStorage.setItem("user", JSON.stringify(userData));
-                          localStorage.setItem("token", userData.token);
-
-                          if (userData.role === "admin") navigate("/admin");
-                          else if(userData.role === "user") navigate("/dashboard");
-                          else navigate("/");
-                        }
-                      }}
+                      clientId="369885088133-j9n7d76p6aukqljpb76fpsfu68bq76mj.apps.googleusercontent.com"
+                      onSuccess={handleGoogleSuccess}
                       onError={() => {
                         console.log("Google Login Failed");
+                        setError('Google login failed. Please try again.');
                       }}
                     />
                   </div>
-
                 </form>
 
                 {/* Sign Up Link */}

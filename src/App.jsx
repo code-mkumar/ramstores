@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login.jsx";
 import Register from "./pages/Register.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
@@ -16,18 +16,54 @@ import ForgotPassword from "./pages/ForgotPassword.jsx";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min.js";
 
-function App() {
-  const [user, setUser] = useState(
-    JSON.parse(localStorage.getItem("user")) || null
-  );
+// Protected Route Component
+const ProtectedRoute = ({ children, user, allowedRoles }) => {
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  if (allowedRoles && !allowedRoles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
 
+function App() {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // Check for existing session on mount
   useEffect(() => {
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    } else {
-      localStorage.removeItem("user");
-    }
-  }, [user]);
+    const checkAuth = () => {
+      try {
+        const token = sessionStorage.getItem("token");
+        const storedUser = sessionStorage.getItem("user");
+        
+        if (token && storedUser) {
+          const userData = JSON.parse(storedUser);
+          setUser(userData);
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+        sessionStorage.clear();
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkAuth();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-vh-100 d-flex align-items-center justify-content-center">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Router>
@@ -36,25 +72,101 @@ function App() {
         <Route path="/" element={<InfoPage />} />
         <Route
           path="/login"
-          element={<Login user={user} setUser={setUser} />}
+          element={
+            user ? (
+              <Navigate to={
+                user.role === 'admin' ? '/admin' : 
+                user.role === 'seller' ? '/seller' : 
+                '/dashboard'
+              } replace />
+            ) : (
+              <Login setUser={setUser} />
+            )
+          }
         />
         <Route
           path="/register"
-          element={<Register user={user} setUser={setUser} />}
+          element={
+            user ? (
+              <Navigate to={
+                user.role === 'admin' ? '/admin' : 
+                user.role === 'seller' ? '/seller' : 
+                '/dashboard'
+              } replace />
+            ) : (
+              <Register setUser={setUser} />
+            )
+          }
         />
         <Route path="/forgetpass" element={<ForgotPassword />} />
 
-        {/* Dashboard Routes */}
-        <Route path="/admin" element={<AdminDashboard user={user} />} />
-        <Route path="/seller" element={<SellerDashboard user={user} />} />
-        <Route path="/dashboard" element={<UserDashboard user={user} />} />
+        {/* Protected Dashboard Routes */}
+        <Route 
+          path="/admin" 
+          element={
+            <ProtectedRoute user={user} allowedRoles={['admin']}>
+              <AdminDashboard user={user} setUser={setUser} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/seller" 
+          element={
+            <ProtectedRoute user={user} allowedRoles={['seller']}>
+              <SellerDashboard user={user} setUser={setUser} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/dashboard" 
+          element={
+            <ProtectedRoute user={user} allowedRoles={['user']}>
+              <UserDashboard user={user} setUser={setUser} />
+            </ProtectedRoute>
+          } 
+        />
 
-        {/* User Routes */}
-        <Route path="/profile" element={<Profile user={user} />} />
-        <Route path="/cart" element={<Cart user={user} />} />
-        <Route path="/wishlist" element={<Wishlist user={user} />} />
-        <Route path="/orders" element={<Orders user={user} />} />
-        <Route path="/notifications" element={<Notifications user={user} />} />
+        {/* Protected User Routes */}
+        <Route 
+          path="/profile" 
+          element={
+            <ProtectedRoute user={user}>
+              <Profile user={user} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/cart" 
+          element={
+            <ProtectedRoute user={user}>
+              <Cart user={user} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/wishlist" 
+          element={
+            <ProtectedRoute user={user}>
+              <Wishlist user={user} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/orders" 
+          element={
+            <ProtectedRoute user={user}>
+              <Orders user={user} />
+            </ProtectedRoute>
+          } 
+        />
+        <Route 
+          path="/notifications" 
+          element={
+            <ProtectedRoute user={user}>
+              <Notifications user={user} />
+            </ProtectedRoute>
+          } 
+        />
 
         {/* 404 Route */}
         <Route path="*" element={<NotFound />} />
