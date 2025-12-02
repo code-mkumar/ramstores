@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, Link,useNavigate } from "react-router-dom";
 import { ShoppingBag, Trash2, Plus, Minus } from "lucide-react";
 import API,{baseAPI} from "../../utils/api";
 import UserHeader from "./Header";
@@ -8,8 +8,8 @@ export default function Cart({ user }) {
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(false);
   const [cartWithProducts, setCartWithProducts] = useState([]);
-
-
+  const navigate = useNavigate();
+  
   if (!user) return <Navigate to="/login" />;
 
   useEffect(() => {
@@ -75,10 +75,20 @@ export default function Cart({ user }) {
       return;
     }
 
-    if (!user.phone || !user.address) {
-    alert("Please complete your phone number and address before placing an order.");
-    return <Navigate to="/profile" />; // redirect to profile
-  }
+    try {
+    // Fetch the latest user profile from backend
+    const profileRes = await API.get(`/user/profile`);
+    const userProfile = profileRes.data.user;
+
+    // Check phone and address
+    if (!userProfile.phone || !userProfile.address) {
+      alert("Please complete your phone number and address before placing an order.");
+      navigate("/profile");
+      return;
+    }
+   }catch(err){
+      console.error("Checkout Error:", error);
+   }
 
     setLoading(true);
 
