@@ -20,6 +20,8 @@ export default function Login({ setUser }) {
       ...formData,
       [e.target.name]: e.target.value
     });
+    // Clear error when user starts typing
+    if (error) setError('');
   };
 
   const handleSubmit = async (e) => {
@@ -29,40 +31,41 @@ export default function Login({ setUser }) {
 
     try {
       const response = await API.post('/auth/login', formData);
-      console.log('Full login response:', response);
+      console.log('Login response:', response.data);
       
       if (response.data.success) {
-        console.log('Login successful, storing data...');
-        
+        const token = response.data.access_token || response.data.token;
         const userData = {
           ...response.data.user,
-          token: response.data.access_token || response.data.token
+          token: token
         };
         
-        // Store in sessionStorage
+        console.log('Storing token:', token);
+        console.log('User data:', userData);
+        
+        // Store credentials in sessionStorage
         sessionStorage.setItem('user', JSON.stringify(userData));
-        sessionStorage.setItem('token', userData.token);
+        sessionStorage.setItem('token', token);
         
         // Update App state
         setUser(userData);
         
-        console.log('User authenticated:', userData);
+        console.log('Navigation to:', userData.role);
         
-        // Navigate based on role
-        if (userData.role === 'admin') {
-          navigate('/admin', { replace: true });
-        } else if (userData.role === 'seller') {
-          navigate('/seller', { replace: true });
-        } else if (userData.role === 'user') {
-          navigate('/dashboard', { replace: true });
-        } else {
-          navigate('/', { replace: true });
-        }
+        // Navigate immediately
+        const path = 
+          userData.role === 'admin' ? '/admin' :
+          userData.role === 'seller' ? '/seller' :
+          userData.role === 'user' ? '/dashboard' : '/';
+        
+        navigate(path, { replace: true });
       }
     } catch (err) {
       console.error('Login error:', err);
+      console.error('Error response:', err.response?.data);
       setError(
         err.response?.data?.message || 
+        err.response?.data?.msg ||
         'Login failed. Please check your credentials.'
       );
     } finally {
@@ -75,39 +78,57 @@ export default function Login({ setUser }) {
     setError('');
 
     try {
-      const token = credentialResponse.credential;
-      const response = await API.post("/auth/google-login", { token });
+      const googleToken = credentialResponse.credential;
+      console.log('Google token received, length:', googleToken?.length);
+      
+      const response = await API.post("/auth/google-login", { token: googleToken });
+      console.log('Google login response:', response.data);
 
       if (response.data.success) {
+        const token = response.data.access_token || response.data.token;
         const userData = {
           ...response.data.user,
-          token: response.data.access_token
+          token: token
         };
 
-        // Store in sessionStorage
+        console.log('Storing Google user token:', token);
+        console.log('Google user data:', userData);
+
+        // Store credentials in sessionStorage
         sessionStorage.setItem("user", JSON.stringify(userData));
-        sessionStorage.setItem("token", userData.token);
+        sessionStorage.setItem("token", token);
 
         // Update App state
         setUser(userData);
 
-        // Navigate based on role
-        if (userData.role === "admin") {
-          navigate("/admin", { replace: true });
-        } else if (userData.role === "seller") {
-          navigate("/seller", { replace: true });
-        } else if (userData.role === "user") {
-          navigate("/dashboard", { replace: true });
-        } else {
-          navigate("/", { replace: true });
-        }
+        console.log('Google login - Navigating to:', userData.role);
+
+        // Navigate immediately
+        const path = 
+          userData.role === 'admin' ? '/admin' :
+          userData.role === 'seller' ? '/seller' :
+          userData.role === 'user' ? '/dashboard' : '/';
+        
+        navigate(path, { replace: true });
+      } else {
+        setError('Google login failed. Please try again.');
       }
     } catch (err) {
       console.error('Google login error:', err);
-      setError('Google login failed. Please try again.');
+      console.error('Google error response:', err.response?.data);
+      setError(
+        err.response?.data?.message ||
+        err.response?.data?.msg ||
+        'Google login failed. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleError = () => {
+    console.error("Google Login Failed");
+    setError('Google login was cancelled or failed.');
   };
 
   return (
@@ -170,7 +191,7 @@ export default function Login({ setUser }) {
                          background: 'rgba(220, 53, 69, 0.1)',
                          color: '#dc3545'
                        }}>
-                    <AlertCircle size={20} className="me-2" />
+                    <AlertCircle size={20} className="me-2 flex-shrink-0" />
                     <span>{error}</span>
                   </div>
                 )}
@@ -307,15 +328,22 @@ export default function Login({ setUser }) {
                     ) : 'Login'}
                   </button>
 
+                  {/* Divider */}
+                  <div className="position-relative my-4">
+                    <hr style={{ borderColor: '#e2e8f0' }} />
+                    <span className="position-absolute top-50 start-50 translate-middle px-3" 
+                          style={{ background: 'rgba(255, 255, 255, 0.95)', color: '#718096', fontSize: '14px' }}>
+                      Or continue with
+                    </span>
+                  </div>
+
                   {/* Google Login */}
-                  <div className="mt-3 d-flex justify-content-center">
+                  <div className="d-flex justify-content-center">
                     <GoogleLogin
-                      clientId="369885088133-j9n7d76p6aukqljpb76fpsfu68bq76mj.apps.googleusercontent.com"
                       onSuccess={handleGoogleSuccess}
-                      onError={() => {
-                        console.log("Google Login Failed");
-                        setError('Google login failed. Please try again.');
-                      }}
+                      onError={handleGoogleError}
+                      useOneTap
+                      disabled={loading}
                     />
                   </div>
                 </form>

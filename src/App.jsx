@@ -23,7 +23,12 @@ const ProtectedRoute = ({ children, user, allowedRoles }) => {
   }
   
   if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+    // Redirect to appropriate dashboard based on role
+    const redirectPath = 
+      user.role === 'admin' ? '/admin' :
+      user.role === 'seller' ? '/seller' :
+      user.role === 'user' ? '/dashboard' : '/';
+    return <Navigate to={redirectPath} replace />;
   }
   
   return children;
@@ -37,16 +42,33 @@ function App() {
   useEffect(() => {
     const checkAuth = () => {
       try {
-        const token = sessionStorage.getItem("token");
-        const storedUser = sessionStorage.getItem("user");
+        // Check sessionStorage first
+        let token = sessionStorage.getItem("token");
+        let storedUser = sessionStorage.getItem("user");
+        
+        // Fallback to localStorage for backward compatibility
+        if (!token || !storedUser) {
+          token = localStorage.getItem("token");
+          storedUser = localStorage.getItem("user");
+          
+          // If found in localStorage, migrate to sessionStorage
+          if (token && storedUser) {
+            sessionStorage.setItem("token", token);
+            sessionStorage.setItem("user", storedUser);
+          }
+        }
         
         if (token && storedUser) {
           const userData = JSON.parse(storedUser);
+          console.log('Auth check - User found:', userData);
           setUser(userData);
+        } else {
+          console.log('Auth check - No user found');
         }
       } catch (error) {
         console.error("Auth check error:", error);
         sessionStorage.clear();
+        localStorage.clear();
       } finally {
         setLoading(false);
       }
@@ -72,31 +94,11 @@ function App() {
         <Route path="/" element={<InfoPage />} />
         <Route
           path="/login"
-          element={
-            user ? (
-              <Navigate to={
-                user.role === 'admin' ? '/admin' : 
-                user.role === 'seller' ? '/seller' : 
-                '/dashboard'
-              } replace />
-            ) : (
-              <Login setUser={setUser} />
-            )
-          }
+          element={!user ? <Login setUser={setUser} /> : <Navigate to="/dashboard" replace />}
         />
         <Route
           path="/register"
-          element={
-            user ? (
-              <Navigate to={
-                user.role === 'admin' ? '/admin' : 
-                user.role === 'seller' ? '/seller' : 
-                '/dashboard'
-              } replace />
-            ) : (
-              <Register setUser={setUser} />
-            )
-          }
+          element={!user ? <Register setUser={setUser} /> : <Navigate to="/dashboard" replace />}
         />
         <Route path="/forgetpass" element={<ForgotPassword />} />
 
