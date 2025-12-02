@@ -274,7 +274,7 @@ export default function Login() {
                         if (response.data.success) {
                           const userData = {
                             ...response.data.user,
-                            token: response.data.access_token
+                            token: response.data.access_token || response.data.token
                           };
 
                           localStorage.setItem("user", JSON.stringify(userData));
