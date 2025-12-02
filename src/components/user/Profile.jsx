@@ -39,6 +39,7 @@ export default function Profile({ user }) {
       }
     } catch (error) {
       console.error("Error loading profile:", error);
+      setPreviewUrl("https://cdn-icons-png.flaticon.com/512/149/149071.png");
     }
   };
 
@@ -145,8 +146,11 @@ export default function Profile({ user }) {
                   <img
                     src={
                         previewUrl
-                        ? profile_image.startsWith('http') ? `${previewUrl}`:`${baseAPI}${previewUrl}`
-                        : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                    ? previewUrl?.startsWith('http') 
+                      ? previewUrl 
+                      : previewUrl ? `${baseAPI}${previewUrl}` 
+                      : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                    : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                     }
                     alt="profile"
                     style={{

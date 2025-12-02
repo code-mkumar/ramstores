@@ -45,6 +45,7 @@ export default function UserHeader({
       }
     } catch (error) {
       console.error("Error loading user profile:", error);
+      setProfileImage("https://cdn-icons-png.flaticon.com/512/149/149071.png");
     }
   };
 
@@ -68,8 +69,10 @@ export default function UserHeader({
     setShowModal(false);
   };
 
-  const profileImageSrc = profileImage.startsWith('http') ?`${profileImage}`:`${baseAPI}${profileImage}`;
-
+  const profileImageSrc = profileImage?.startsWith('http') 
+    ? profileImage 
+    : profileImage ? `${baseAPI}${profileImage}`  // Only prepend if not nullish
+    : "https://cdn-icons-png.flaticon.com/512/149/149071.png";
   return (
     <>
       <div
