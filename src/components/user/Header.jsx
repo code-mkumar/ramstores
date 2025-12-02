@@ -68,7 +68,7 @@ export default function UserHeader({
     setShowModal(false);
   };
 
-  const profileImageSrc = `${baseAPI}${profileImage}`;
+  const profileImageSrc = profileImage.startsWith('http') ?`${profileImage}`:`${baseAPI}${profileImage}`;
 
   return (
     <>

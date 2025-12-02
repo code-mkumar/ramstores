@@ -145,7 +145,7 @@ export default function Profile({ user }) {
                   <img
                     src={
                         previewUrl
-                        ? `${baseAPI}${previewUrl}`
+                        ? profile_image.startsWith('http') ? `${previewUrl}`:`${baseAPI}${previewUrl}`
                         : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                     }
                     alt="profile"
