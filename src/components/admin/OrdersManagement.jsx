@@ -168,6 +168,7 @@ const handleConfirmAll = async () => {
       pdf.text("RAM STORES", 80, 15);
 
       pdf.setFontSize(12);
+      pdf.setFont("Roboto-Regular");  // Unicode font
       pdf.text(`Order Number: ${order.order_number}`, 10, 30);
       pdf.text(`Customer: ${order.customer}`, 10, 40);
       pdf.text(`Order Date: ${order.created_at}`, 10, 50);
