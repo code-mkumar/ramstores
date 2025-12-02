@@ -3,6 +3,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../../utils/api";
 import OrderModal from "./modals/OrderModal";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 const OrdersManagement = () => {
   const navigate = useNavigate();
@@ -139,7 +141,9 @@ const OrdersManagement = () => {
       }
     }
   };
-  const handleConfirmAll = async () => {
+
+
+const handleConfirmAll = async () => {
   try {
     const token = getToken();
 
@@ -154,19 +158,44 @@ const OrdersManagement = () => {
       return;
     }
 
-    // decode base64 → download PDF
-    const pdfBase64 = res.data.pdf;
-    const byteCharacters = atob(pdfBase64);
-    const byteNumbers = Array.from(byteCharacters, c => c.charCodeAt(0));
-    const blob = new Blob([new Uint8Array(byteNumbers)], { type: "application/pdf" });
+    const orders = res.data.orders;
 
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = res.data.filename;
-    link.click();
+    // ---- CREATE PDF ----
+    const pdf = new jsPDF();
 
-    // refresh orders AFTER backend commits
+    orders.forEach((order, index) => {
+      pdf.setFontSize(20);
+      pdf.text("RAM STORES", 80, 15);
+
+      pdf.setFontSize(12);
+      pdf.text(`Order Number: ${order.order_number}`, 10, 30);
+      pdf.text(`Customer: ${order.customer}`, 10, 40);
+      pdf.text(`Order Date: ${order.created_at}`, 10, 50);
+
+      // Table
+      const tableData = order.items.map(item => [
+        item.product,
+        item.quantity,
+        "₹" + item.unit_price,
+        "₹" + item.total_price
+      ]);
+
+      autoTable(pdf, {
+        startY: 60,
+        head: [["Product", "Qty", "Price", "Total"]],
+        body: tableData
+      });
+
+      pdf.text(`Grand Total: ₹${order.total_amount}`, 10, pdf.lastAutoTable.finalY + 10);
+
+      if (index < orders.length - 1) {
+        pdf.addPage();
+      }
+    });
+
+    pdf.save("all_orders_bill.pdf");
+
+    // Refresh orders
     setTimeout(() => fetchOrders(), 500);
 
   } catch (err) {
@@ -174,6 +203,7 @@ const OrdersManagement = () => {
     alert("Error confirming orders");
   }
 };
+
 
 
   const handleInputChange = (e) => {
