@@ -265,6 +265,7 @@ export default function Login() {
                   </button>
                   <div className="mt-3">
                     <GoogleLogin
+                    clientId="369885088133-j9n7d76p6aukqljpb76fpsfu68bq76mj.apps.googleusercontent.com"
                       onSuccess={async (credentialResponse) => {
                         const token = credentialResponse.credential; // Google token
 
