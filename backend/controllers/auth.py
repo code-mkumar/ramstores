@@ -210,7 +210,7 @@ def update_profile():
 @auth_bp.route('/forgot-password', methods=['POST'])
 def forgot_password():
     try:
-        data = request.get_json()
+        data = request.get_json(force=True)  # ensures we get JSON even if Content-Type is missing
         email = data.get('email')
         
         if not email:
@@ -231,20 +231,23 @@ def forgot_password():
             'verified': False
         }
         
-        # Send OTP via email
-        if send_otp_email(email, otp,user.full_name):
-            return jsonify({
-                'success': True,
-                'message': 'OTP sent to your email'
-            }), 200
+        # Send OTP via email with try/except
+        success, mail_message = send_otp_email(email, otp, user.full_name)
+
+        if success:
+            return jsonify({'success': True, 'message': 'OTP sent to your email'}), 200
         else:
+            # Return the exact SMTP error for debugging
             return jsonify({
                 'success': False,
-                'message': 'Failed to send OTP. Please try again.'
+                'message': 'Failed to send OTP',
+                'error': mail_message
             }), 500
-            
+
+                    
     except Exception as e:
-        return jsonify({'success': False, 'message': str(e)}), 500
+        print("Forgot-password error:", e)
+        return jsonify({'success': False, 'message': 'Internal server error'}), 500
 
 # ----------------- VERIFY OTP -----------------
 @auth_bp.route('/verify-otp', methods=['POST'])
