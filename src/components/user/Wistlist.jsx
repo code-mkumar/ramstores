@@ -18,6 +18,7 @@ export default function Wishlist({ user }) {
     setLoading(true);
     try {
       const res = await API.get("/user/wishlist");
+      console.log(res);
       if (res.data.success) {
         setWishlist(res.data.wishlist);
       }
