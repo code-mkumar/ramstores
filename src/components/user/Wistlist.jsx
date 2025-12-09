@@ -132,16 +132,33 @@ export default function Wishlist({ user }) {
                     >
                       {/* Product Image */}
                       <div className="position-relative">
-                        <img
-                          src={`${baseAPI}${item.images?.[0] || "/placeholder.jpg"}`}
-                          alt={item.name}
-                          className="card-img-top"
-                          style={{
-                            height: "200px",
-                            objectFit: "cover",
-                            borderRadius: "15px 15px 0 0"
-                          }}
-                        />
+                        {images.length > 0 ? (
+                          images.map((img, index) => (
+                            <img
+                              key={index}
+                              src={`${baseAPI}${img}`}
+                              alt={`${item.name}-${index}`}
+                              className="card-img-top"
+                              style={{
+                                height: "200px",
+                                objectFit: "cover",
+                                borderRadius: "15px 15px 0 0"
+                              }}
+                            />
+                          ))
+                        ) : (
+                          <img
+                            src="https://via.placeholder.com/300"
+                            alt="placeholder"
+                            className="card-img-top"
+                            style={{
+                              height: "200px",
+                              objectFit: "cover",
+                              borderRadius: "15px 15px 0 0"
+                            }}
+                          />
+                        )}
+
                         
                         {/* Stock Badge */}
                         {item.stock === 0 && (
