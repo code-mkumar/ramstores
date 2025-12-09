@@ -46,6 +46,8 @@ export default function ForgotPassword() {
         }, 1500);
       }
     } catch (err) {
+      console.error("OTP request error:", err);          // Full error object
+      console.error("Backend response:", err.response); // What the server sent
       setError(err.response?.data?.message || 'Failed to send OTP');
     } finally {
       setLoading(false);
