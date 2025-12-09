@@ -37,7 +37,7 @@ export default function ForgotPassword() {
       const response = await API.post('/auth/forgot-password', {
         email: formData.email
       });
-      
+      console.log(response)
       if (response.data.success) {
         setSuccess('OTP has been sent to your email!');
         setTimeout(() => {
