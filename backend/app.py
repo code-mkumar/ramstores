@@ -71,74 +71,183 @@ def serve_uploaded_file(filename):
 
 
 def fix_column_types():
-    """Fix column types for orders table"""
     try:
+        print("\n🔧 Starting full PostgreSQL column fix...\n")
+
+        fixes = [
+            # orders table
+            ("orders", "total_amount", "DOUBLE PRECISION"),
+            ("orders", "amount", "DOUBLE PRECISION"),
+            ("orders", "created_at", "TIMESTAMP"),
+            ("orders", "updated_at", "TIMESTAMP"),
+
+            # order_items table
+            ("order_items", "unit_price", "DOUBLE PRECISION"),
+            ("order_items", "total_price", "DOUBLE PRECISION"),
+            ("order_items", "quantity", "INTEGER"),
+
+            # users table
+            ("users", "created_at", "TIMESTAMP"),
+            ("users", "updated_at", "TIMESTAMP"),
+
+            # products table
+            ("products", "price", "DOUBLE PRECISION"),
+            ("products", "gst", "DOUBLE PRECISION"),
+            ("products", "stock", "INTEGER"),
+            ("products", "created_at", "TIMESTAMP"),
+            ("products", "updated_at", "TIMESTAMP"),
+
+            # cart table
+            ("cart", "quantity", "INTEGER"),
+            ("cart", "created_at", "TIMESTAMP"),
+            ("cart", "updated_at", "TIMESTAMP"),
+
+            # reviews table
+            ("reviews", "rating", "INTEGER"),
+            ("reviews", "created_at", "TIMESTAMP"),
+            ("reviews", "updated_at", "TIMESTAMP"),
+
+            # wishlist / notification
+            ("wishlist", "added_at", "TIMESTAMP"),
+            ("notifications", "created_at", "TIMESTAMP"),
+        ]
+
         with db.engine.connect() as conn:
-            print("🔧 Fixing column types...")
-            
-            # Check if orders table exists
-            result = conn.execute(text("""
-                SELECT EXISTS (
-                    SELECT FROM information_schema.tables 
-                    WHERE table_name = 'orders'
-                )
-            """))
-            
-            if not result.scalar():
-                print("   ⚠️ Orders table doesn't exist yet, skipping...")
-                return
-            
-            # Get current column types
-            result = conn.execute(text("""
-                SELECT column_name, data_type 
-                FROM information_schema.columns 
-                WHERE table_name = 'orders' 
-                AND column_name IN ('total_amount', 'amount')
-            """))
-            
-            columns_info = {row[0]: row[1] for row in result}
-            
-            # Fix total_amount if it's TEXT
-            if columns_info.get('total_amount') == 'text':
-                print(f"   Converting total_amount from TEXT to DOUBLE PRECISION...")
-                
-                conn.execute(text("""
-                    ALTER TABLE orders 
-                    ADD COLUMN IF NOT EXISTS total_amount_temp DOUBLE PRECISION
+            for table, column, new_type in fixes:
+
+                # check table exists
+                exists = conn.execute(text(f"""
+                    SELECT EXISTS (
+                        SELECT 1 FROM information_schema.columns 
+                        WHERE table_name='{table}' AND column_name='{column}'
+                    );
+                """)).scalar()
+
+                if not exists:
+                    continue
+
+                # get current type
+                current = conn.execute(text(f"""
+                    SELECT data_type 
+                    FROM information_schema.columns 
+                    WHERE table_name='{table}' AND column_name='{column}'
+                """)).scalar()
+
+                if current is None:
+                    continue
+
+                # ONLY fix if TEXT (text = type OID 25)
+                if current != "text":
+                    continue
+
+                print(f"🔄 Fixing {table}.{column} (was TEXT) → {new_type}")
+
+                # Add temp column
+                conn.execute(text(f"""
+                    ALTER TABLE {table}
+                    ADD COLUMN {column}_temp {new_type};
                 """))
-                
-                conn.execute(text("""
-                    UPDATE orders 
-                    SET total_amount_temp = CASE 
-                        WHEN total_amount IS NULL OR total_amount = '' OR total_amount = 'None' THEN 0
-                        WHEN total_amount ~ '^-?[0-9]+(\\.[0-9]+)?$' THEN total_amount::DOUBLE PRECISION
-                        ELSE 0
-                    END
-                """))
-                
-                conn.execute(text("ALTER TABLE orders DROP COLUMN total_amount"))
-                conn.execute(text("ALTER TABLE orders RENAME COLUMN total_amount_temp TO total_amount"))
-                conn.execute(text("ALTER TABLE orders ALTER COLUMN total_amount SET NOT NULL"))
-                
-                print("   ✅ total_amount converted!")
-            
-            # Fix amount if it exists and has NULL values
-            if 'amount' in columns_info:
-                print("   Updating NULL amount values...")
-                conn.execute(text("""
-                    UPDATE orders 
-                    SET amount = COALESCE(amount, total_amount, 0)
-                    WHERE amount IS NULL
-                """))
-                
-                conn.execute(text("ALTER TABLE orders ALTER COLUMN amount SET NOT NULL"))
-                print("   ✅ amount column updated!")
-            
+
+                # Copy data safely
+                if "TIMESTAMP" in new_type:
+                    conn.execute(text(f"""
+                        UPDATE {table}
+                        SET {column}_temp = 
+                            CASE 
+                                WHEN {column} ~ '^[0-9]{4}-' THEN {column}::timestamp
+                                ELSE NULL
+                            END;
+                    """))
+                elif "DOUBLE" in new_type:
+                    conn.execute(text(f"""
+                        UPDATE {table}
+                        SET {column}_temp = 
+                            CASE 
+                                WHEN {column} ~ '^-?[0-9]+(\\.[0-9]+)?$' THEN {column}::DOUBLE PRECISION
+                                ELSE 0
+                            END;
+                    """))
+                elif "INTEGER" in new_type:
+                    conn.execute(text(f"""
+                        UPDATE {table}
+                        SET {column}_temp = 
+                            CASE 
+                                WHEN {column} ~ '^[0-9]+$' THEN {column}::INTEGER
+                                ELSE 0
+                            END;
+                    """))
+
+                # Replace old column
+                conn.execute(text(f"ALTER TABLE {table} DROP COLUMN {column};"))
+                conn.execute(text(f"ALTER TABLE {table} RENAME COLUMN {column}_temp TO {column};"))
+
             conn.commit()
-            print("✅ Column types fixed!")
-            
+
+        print("\n✅ All TEXT numeric/timestamp columns fixed successfully!\n")
+
     except Exception as e:
-        print(f"⚠️ Error fixing columns: {e}")
+        print(f"\n❌ ERROR in fix_column_types(): {e}\n")
+
+def fix_postgres_sequences():
+    """
+    Fix AUTOINCREMENT issue after SQLite → PostgreSQL migration
+    Safe to run multiple times
+    """
+    try:
+        with db.engine.begin() as conn:
+            print("🔧 Fixing PostgreSQL sequences for all tables...")
+
+            tables = conn.execute(text("""
+                SELECT tablename
+                FROM pg_tables
+                WHERE schemaname = 'public'
+            """)).fetchall()
+
+            for (table_name,) in tables:
+                # Skip Alembic table if exists
+                if table_name == 'alembic_version':
+                    continue
+
+                # Check if table has an id column
+                has_id = conn.execute(text("""
+                    SELECT column_name
+                    FROM information_schema.columns
+                    WHERE table_name = :table
+                    AND column_name = 'id'
+                """), {'table': table_name}).fetchone()
+
+                if not has_id:
+                    continue
+
+                seq_name = f"{table_name}_id_seq"
+
+                print(f"   🔹 Processing {table_name}.id")
+
+                # Create sequence if missing
+                conn.execute(text(f"""
+                    CREATE SEQUENCE IF NOT EXISTS {seq_name}
+                """))
+
+                # Attach sequence to column
+                conn.execute(text(f"""
+                    ALTER TABLE {table_name}
+                    ALTER COLUMN id
+                    SET DEFAULT nextval('{seq_name}')
+                """))
+
+                # Sync sequence with max(id)
+                conn.execute(text(f"""
+                    SELECT setval(
+                        '{seq_name}',
+                        COALESCE((SELECT MAX(id) FROM {table_name}), 0) + 1,
+                        false
+                    )
+                """))
+
+            print("✅ PostgreSQL AUTOINCREMENT fixed successfully")
+
+    except Exception as e:
+        print("❌ Error fixing sequences:", e)
 
 
 def add_missing_columns():
@@ -227,6 +336,8 @@ def initialize_app():
             # Step 1: Create all tables (if they don't exist)
             db.create_all()
             print("✅ Database tables created/verified")
+
+            fix_postgres_sequences()
             
             # Step 2: Fix column types AFTER tables exist
             fix_column_types()

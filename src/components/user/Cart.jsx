@@ -99,6 +99,7 @@ export default function Cart({ user }) {
       }));
 
       const res = await API.post("/orders/orders", { items });
+      console.log(res)
 
       // Clear cart after all orders succeed
       const res1 = await API.delete(`/cart/clear/${user.id}`);

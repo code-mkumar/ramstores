@@ -15,26 +15,29 @@ def generate_order_number():
     random_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
     return f"ORD{timestamp}{random_str}"
 
-# Create order
 @order_bp.route('/orders', methods=['POST'])
 @jwt_required()
 def create_order():
     try:
-        current_user_id = get_jwt_identity()
+        current_user_id = int(get_jwt_identity())
         data = request.get_json()
 
         items = data.get("items")
-        if not items or len(items) == 0:
+        if not items:
             return jsonify({'success': False, 'message': 'No items found'}), 400
 
-        # Create order
+        user = User.query.get_or_404(current_user_id)
+
         order_number = generate_order_number()
-        user = User.query.filter_by(id=current_user_id).first()
         order = Order(
             user_id=current_user_id,
             order_number=order_number,
-            total_amount=0  # calc later
+            total_amount=0,
+            amount=0,
+            payment_status='Unpaid',
+            payment_status_detail='Pending'
         )
+
         db.session.add(order)
         db.session.flush()  # get order.id
 
@@ -42,8 +45,8 @@ def create_order():
         created_items = []
 
         for item in items:
-            product_id = item["product_id"]
-            quantity = item["quantity"]
+            product_id = int(item["product_id"])
+            quantity = int(item["quantity"])
 
             product = Product.query.get_or_404(product_id)
 
@@ -65,23 +68,41 @@ def create_order():
                 unit_price=unit_price,
                 total_price=total_price
             )
+
             db.session.add(order_item)
             created_items.append(order_item)
 
             total_amount += total_price
-
-            # Reduce stock
             product.stock -= quantity
 
-        # Update order total
+        # ✅ Update order totals once
         order.total_amount = total_amount
+        order.amount = total_amount
+
         db.session.commit()
 
-        res=send_order_confirmation_email(total_amount=total_amount,order_number=order_number,user_name=user.full_name,to_email=user.email)
-        print(res)
+        # ✅ Email handling
+        mail_status = False
+        mail_message = "Email not sent"
+
+        try:
+            send_order_confirmation_email(
+                total_amount=total_amount,
+                order_number=order_number,
+                user_name=user.full_name or user.username,
+                to_email=user.email
+            )
+            mail_status = True
+            mail_message = "Order confirmation email sent"
+
+        except Exception as mail_error:
+            mail_message = str(mail_error)
+
         return jsonify({
             "success": True,
             "message": "Order placed successfully",
+            "mail_sent": mail_status,
+            "mail_message": mail_message,
             "order": {
                 "order_id": order.id,
                 "order_number": order.order_number,
@@ -100,7 +121,11 @@ def create_order():
 
     except Exception as e:
         db.session.rollback()
-        return jsonify({"success": False, "message": str(e)}), 500
+        return jsonify({
+            "success": False,
+            "message": "Order creation failed",
+            "error": str(e)
+        }), 500
 
 @order_bp.route('/orders', methods=['GET'])
 @jwt_required()
