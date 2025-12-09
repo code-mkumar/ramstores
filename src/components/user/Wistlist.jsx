@@ -69,21 +69,7 @@ export default function Wishlist({ user }) {
     }
     return stars;
   };
-function img_url(images) {
-  try {
-    const imgArray = Array.isArray(images)
-      ? images
-      : JSON.parse(images || "[]");
 
-    if (imgArray.length > 0) {
-      return `${baseAPI}${imgArray[0]}`;
-    }
-  } catch (e) {
-    console.error("Invalid images format", e);
-  }
-
-  return "/placeholder.jpg";
-}
   return (
     <div
       className="min-vh-100 position-relative"
@@ -148,7 +134,7 @@ function img_url(images) {
                       {/* Product Image */}
                       <div className="position-relative">
                         <img
-                          src={img_url(item.images)}
+                          src={`${baseAPI}${item.images?.[0].images[0] || "/placeholder.jpg"}`}
                           alt={item.name}
                           className="card-img-top"
                           style={{
