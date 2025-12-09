@@ -69,7 +69,21 @@ export default function Wishlist({ user }) {
     }
     return stars;
   };
+function img_url(images) {
+  try {
+    const imgArray = Array.isArray(images)
+      ? images
+      : JSON.parse(images || "[]");
 
+    if (imgArray.length > 0) {
+      return `${baseAPI}${imgArray[0]}`;
+    }
+  } catch (e) {
+    console.error("Invalid images format", e);
+  }
+
+  return "/placeholder.jpg";
+}
   return (
     <div
       className="min-vh-100 position-relative"
@@ -130,35 +144,19 @@ export default function Wishlist({ user }) {
                         background: "white"
                       }}
                     >
+                      
                       {/* Product Image */}
                       <div className="position-relative">
-                        {images.length > 0 ? (
-                          images.map((img, index) => (
-                            <img
-                              key={index}
-                              src={`${baseAPI}${img}`}
-                              alt={`${item.name}-${index}`}
-                              className="card-img-top"
-                              style={{
-                                height: "200px",
-                                objectFit: "cover",
-                                borderRadius: "15px 15px 0 0"
-                              }}
-                            />
-                          ))
-                        ) : (
-                          <img
-                            src="https://via.placeholder.com/300"
-                            alt="placeholder"
-                            className="card-img-top"
-                            style={{
-                              height: "200px",
-                              objectFit: "cover",
-                              borderRadius: "15px 15px 0 0"
-                            }}
-                          />
-                        )}
-
+                        <img
+                          src={img_url(item.images)}
+                          alt={item.name}
+                          className="card-img-top"
+                          style={{
+                            height: "200px",
+                            objectFit: "cover",
+                            borderRadius: "15px 15px 0 0"
+                          }}
+                        />
                         
                         {/* Stock Badge */}
                         {item.stock === 0 && (
