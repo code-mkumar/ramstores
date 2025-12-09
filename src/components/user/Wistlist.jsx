@@ -133,7 +133,7 @@ export default function Wishlist({ user }) {
                       {/* Product Image */}
                       <div className="position-relative">
                         <img
-                          src={`${baseAPI}${item.images}` || "https://via.placeholder.com/300"}
+                          src={`${baseAPI}${item.images?.[0] || "/placeholder.jpg"}`}
                           alt={item.name}
                           className="card-img-top"
                           style={{
