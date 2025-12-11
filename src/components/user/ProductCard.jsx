@@ -3,7 +3,7 @@ import { ShoppingCart, Star, Heart } from "lucide-react";
 import {baseAPI} from "../../utils/api";
 export default function ProductCard({ product, onAdd, onWishlist }) {
 
-
+  console.log(product);
   const [showModal, setShowModal] = useState(false);
   const [currentImg, setCurrentImg] = useState(0);
 
