@@ -130,11 +130,11 @@ export default function Wishlist({ user }) {
                         background: "white"
                       }}
                     >
-                      
+                    
                       {/* Product Image */}
                       <div className="position-relative">
                         <img
-                          src={`${baseAPI}${item.images?.[0].images[0] || "/placeholder.jpg"}`}
+                          src={`${baseAPI}${item?.images?.[0]?.images?.[0] ? baseAPI + item.images[0].images[0]: "/placeholder.jpg"}`}
                           alt={item.name}
                           className="card-img-top"
                           style={{
