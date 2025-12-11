@@ -436,6 +436,42 @@ export default function ProductCard({ product, onAdd, onWishlist }) {
           </div>
         </div>
       )}
+      {showAllReviews && (
+        <div className="mt-3 p-3 border rounded">
+          <select
+            className="form-select mb-3"
+            value={ratingFilter}
+            onChange={(e) => setRatingFilter(e.target.value)}
+          >
+            <option value="all">All Ratings</option>
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="3">3 Stars</option>
+            <option value="2">2 Stars</option>
+            <option value="1">1 Star</option>
+          </select>
+
+          {filteredReviews.length > 0 ? (
+            filteredReviews.map((rev, i) => (
+              <div key={i} className="mb-3 pb-2 border-bottom">
+                <p className="m-0">⭐ {rev.rating}</p>
+                <strong>{rev.username}</strong>
+                <p className="m-0">{rev.comment}</p>
+                <small className="text-muted">{rev.created_at}</small>
+              </div>
+            ))
+          ) : (
+            <p className="text-muted">No reviews in this filter</p>
+          )}
+
+          <button
+            className="btn btn-link p-0 mt-2"
+            onClick={() => setShowAllReviews(false)}
+          >
+            Hide reviews ↑
+          </button>
+        </div>
+      )}
 
 
     </>
