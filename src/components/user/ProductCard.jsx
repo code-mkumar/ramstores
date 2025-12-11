@@ -188,142 +188,246 @@ export default function ProductCard({ product, onAdd, onWishlist }) {
       </div>
 
       {/* FULL DESCRIPTION MODAL */}
+      <style>
+      {`
+        @media (max-width: 576px) {
+          .mobile-fullscreen {
+            width: 100% !important;
+            height: 100% !important;
+            margin: 0 !important;
+            max-width: 100% !important;
+          }
+
+          .mobile-fullscreen .modal-content {
+            height: 100% !important;
+            border-radius: 0 !important;
+          }
+        }
+      `}
+      </style>
       {showModal && (
-      <div
-        className="modal fade show d-block"
-        style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
-      >
-        <div className="modal-dialog modal-dialog-centered modal-lg">
-          <div className="modal-content" style={{ borderRadius: "15px" }}>
-            
-            {/* HEADER */}
-            <div className="modal-header">
-              <h5 className="modal-title fw-bold">{product.name}</h5>
-              <button className="btn-close" onClick={() => setShowModal(false)}></button>
-            </div>
+        <div
+          className="modal fade show d-block"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered modal-lg mobile-fullscreen">
+            <div className="modal-content" style={{ borderRadius: "15px" }}>
 
-            {/* BODY */}
-            <div className="modal-body">
+              {/* HEADER */}
+              <div className="modal-header">
+                <h5 className="modal-title fw-bold">{product.name}</h5>
+                <button className="btn-close" onClick={() => setShowModal(false)}></button>
+              </div>
 
-              {/* ---------------- IMAGE CAROUSEL ---------------- */}
-              {product.images_files?.length > 0 ? (
-                <div className="position-relative text-center">
+              {/* BODY */}
+              <div className="modal-body">
 
-                  {/* BIG IMAGE */}
-                  <img
-                    src={`${baseAPI}${product.images_files[currentImg]}`}
-                    className="img-fluid mb-2"
-                    style={{
-                      width: "100%",
-                      maxHeight: "300px",
-                      objectFit: "cover",
-                      borderRadius: "12px",
-                    }}
-                    onClick={() =>
-                      window.open(`${baseAPI}${product.images_files[currentImg]}`, "_blank")
-                    }
-                  />
+                {/* ---------------- IMAGE CAROUSEL ---------------- */}
+                {product.images_files?.length > 0 ? (
+                  <div className="position-relative text-center">
 
-                  {/* LEFT ARROW */}
-                  <button
-                    className="btn btn-light position-absolute"
-                    style={{ top: "45%", left: "10px", borderRadius: "50%" }}
-                    onClick={() =>
-                      setCurrentImg(
-                        currentImg === 0
-                          ? product.images_files.length - 1
-                          : currentImg - 1
-                      )
-                    }
-                  >
-                    ❮
-                  </button>
+                    <img
+                      src={`${baseAPI}${product.images_files[currentImg]}`}
+                      className="img-fluid mb-2"
+                      style={{
+                        width: "100%",
+                        maxHeight: "300px",
+                        objectFit: "cover",
+                        borderRadius: "12px",
+                      }}
+                    />
 
-                  {/* RIGHT ARROW */}
-                  <button
-                    className="btn btn-light position-absolute"
-                    style={{ top: "45%", right: "10px", borderRadius: "50%" }}
-                    onClick={() =>
-                      setCurrentImg(
-                        currentImg === product.images_files.length - 1
-                          ? 0
-                          : currentImg + 1
-                      )
-                    }
-                  >
-                    ❯
-                  </button>
+                    {/* LEFT ARROW */}
+                    <button
+                      className="btn btn-light position-absolute"
+                      style={{ top: "45%", left: "10px", borderRadius: "50%" }}
+                      onClick={() =>
+                        setCurrentImg(
+                          currentImg === 0
+                            ? product.images_files.length - 1
+                            : currentImg - 1
+                        )
+                      }
+                    >
+                      ❮
+                    </button>
 
-                  {/* DOTS */}
-                  <div className="d-flex justify-content-center mt-2">
-                    {product.images_files.map((_, index) => (
-                      <div
-                        key={index}
-                        onClick={() => setCurrentImg(index)}
-                        style={{
-                          width: "10px",
-                          height: "10px",
-                          borderRadius: "50%",
-                          background: currentImg === index ? "#0d6efd" : "#bbb",
-                          margin: "0 4px",
-                          cursor: "pointer",
-                        }}
-                      ></div>
+                    {/* RIGHT ARROW */}
+                    <button
+                      className="btn btn-light position-absolute"
+                      style={{ top: "45%", right: "10px", borderRadius: "50%" }}
+                      onClick={() =>
+                        setCurrentImg(
+                          currentImg === product.images_files.length - 1
+                            ? 0
+                            : currentImg + 1
+                        )
+                      }
+                    >
+                      ❯
+                    </button>
+
+                    {/* DOTS */}
+                    <div className="d-flex justify-content-center mt-2">
+                      {product.images_files.map((_, index) => (
+                        <div
+                          key={index}
+                          onClick={() => setCurrentImg(index)}
+                          style={{
+                            width: "10px",
+                            height: "10px",
+                            borderRadius: "50%",
+                            background: currentImg === index ? "#0d6efd" : "#bbb",
+                            margin: "0 4px",
+                            cursor: "pointer",
+                          }}
+                        ></div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-muted">No images available</p>
+                )}
+
+                {/* ---------------- FULL DESCRIPTION ---------------- */}
+                <p className="mt-3" style={{ whiteSpace: "pre-wrap" }}>
+                  {product.description}
+                </p>
+
+                {/* ---------------- PRICE ---------------- */}
+                <h5 className="fw-bold mt-2">
+                  ₹{product.price?.toFixed(2)}
+                  {product.gst > 0 && (
+                    <small className="text-muted"> + {product.gst}% GST</small>
+                  )}
+                </h5>
+
+                {/* ---------------- STOCK ---------------- */}
+                <p className={product.stock > 0 ? "text-success" : "text-danger"}>
+                  Stock: {product.stock}
+                </p>
+
+                {/* ---------------- RATINGS SECTION ---------------- */}
+                <div className="mt-3 p-3 border rounded">
+
+                  {/* ⭐ Average Rating */}
+                  <h5 className="fw-bold d-flex align-items-center">
+                    <span style={{ fontSize: "22px", color: "#fbbf24" }}>⭐</span>
+                    <span className="ms-2">{product.average_rating} / 5</span>
+                  </h5>
+                  <small className="text-muted">
+                    {product.review_count} reviews
+                  </small>
+
+                  {/* Rating Breakdown (Bars) */}
+                  <div className="mt-3">
+                    {[5, 4, 3, 2, 1].map((star) => (
+                      <div key={star} className="d-flex align-items-center mb-1">
+                        <span style={{ width: "30px" }}>{star}⭐</span>
+                        <div className="progress flex-grow-1 mx-2" style={{ height: "8px" }}>
+                          <div
+                            className="progress-bar bg-warning"
+                            style={{
+                              width: `${
+                                product.rating_breakdown?.[star]?.count || 0
+                              }%`,
+                            }}
+                          ></div>
+                        </div>
+                        <span>
+                          {product.rating_breakdown?.[star]?.count || 0}
+                        </span>
+                      </div>
                     ))}
                   </div>
+
+                  {/* Latest Review */}
+                  {product.ratings?.length > 0 ? (
+                    <div className="mt-3">
+                      <h6 className="fw-bold">Latest Review</h6>
+                      <p className="m-0">⭐ {product.ratings[0].rating}</p>
+                      <strong>{product.ratings[0].username}</strong>
+                      <p>{product.ratings[0].comment}</p>
+
+                      {/* Show All Button */}
+                      {!showAllReviews && (
+                        <button
+                          className="btn btn-link p-0"
+                          onClick={() => setShowAllReviews(true)}
+                        >
+                          Show all reviews →
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-muted mt-3">No reviews yet</p>
+                  )}
                 </div>
-              ) : (
-                <p className="text-muted">No images available</p>
-              )}
 
-              {/* ---------------- FULL DESCRIPTION ---------------- */}
-              <p className="mt-3" style={{ whiteSpace: "pre-wrap" }}>
-                {product.description}
-              </p>
+                {/* ---------------- FULL REVIEW LIST ---------------- */}
+                {showAllReviews && (
+                  <div className="mt-3 p-3 border rounded">
 
-              {/* ---------------- PRICE ---------------- */}
-              <h5 className="fw-bold mt-2">
-                ₹{product.price?.toFixed(2)}
-                {product.gst > 0 && (
-                  <small className="text-muted"> + {product.gst}% GST</small>
+                    {/* Filter */}
+                    <select
+                      className="form-select mb-3"
+                      value={ratingFilter}
+                      onChange={(e) => setRatingFilter(e.target.value)}
+                    >
+                      <option value="all">All Ratings</option>
+                      <option value="5">5 Stars</option>
+                      <option value="4">4 Stars</option>
+                      <option value="3">3 Stars</option>
+                      <option value="2">2 Stars</option>
+                      <option value="1">1 Star</option>
+                    </select>
+
+                    {/* Reviews */}
+                    {filteredReviews.length > 0 ? (
+                      filteredReviews.map((rev, i) => (
+                        <div key={i} className="mb-3 pb-2 border-bottom">
+                          <p className="m-0">⭐ {rev.rating}</p>
+                          <strong>{rev.username}</strong>
+                          <p className="m-0">{rev.comment}</p>
+                          <small className="text-muted">{rev.created_at}</small>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-muted">No reviews in this filter</p>
+                    )}
+
+                    <button
+                      className="btn btn-link p-0 mt-2"
+                      onClick={() => setShowAllReviews(false)}
+                    >
+                      Hide reviews ↑
+                    </button>
+                  </div>
                 )}
-              </h5>
+              </div>
 
-              {/* ---------------- STOCK ---------------- */}
-              <p className={product.stock > 0 ? "text-success" : "text-danger"}>
-                Stock: {product.stock}
-              </p>
-            </div>
+              {/* FOOTER */}
+              <div className="modal-footer d-flex justify-content-between">
+                <button
+                  className="btn btn-success"
+                  onClick={() => {
+                    onAdd(product);
+                    setShowModal(false);
+                  }}
+                >
+                  Add to Cart
+                </button>
 
-            {/* FOOTER */}
-            <div className="modal-footer d-flex justify-content-between">
-
-              {/* ADD TO CART */}
-              <button
-                className="btn btn-success"
-                onClick={() => {
-                  onAdd(product);
-                  setShowModal(false);
-                }}
-              >
-                Add to Cart
-              </button>
-
-            
-
-              {/* CLOSE */}
-              <button
-                className="btn btn-secondary"
-                onClick={() => setShowModal(false)}
-              >
-                Close
-              </button>
+                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                  Close
+                </button>
+              </div>
 
             </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
+
 
     </>
   );
