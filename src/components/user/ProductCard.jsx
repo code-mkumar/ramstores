@@ -7,6 +7,15 @@ export default function ProductCard({ product, onAdd, onWishlist }) {
   const [showModal, setShowModal] = useState(false);
   const [currentImg, setCurrentImg] = useState(0);
 
+  // Add these at the top of your component
+  const [showAllReviews, setShowAllReviews] = useState(false);
+  const [ratingFilter, setRatingFilter] = useState("all");
+
+  // Compute filtered reviews
+  const filteredReviews = product.ratings?.filter((rev) => {
+    if (ratingFilter === "all") return true;
+    return rev.rating === parseInt(ratingFilter);
+  }) || [];
 
   const renderStars = (rating) => {
     const stars = [];
