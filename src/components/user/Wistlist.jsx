@@ -149,7 +149,7 @@ export default function Wishlist({ user }) {
                                 ? `${baseAPI}${parseImages(item.images)[0]}`
                                 : "/placeholder.jpg"
                             }
-                          alt={item.name}
+                          alt={`${baseAPI}${parseImages(item.images)[0]}`}
                           className="card-img-top"
                           style={{
                             height: "200px",
