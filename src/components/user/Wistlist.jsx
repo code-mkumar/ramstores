@@ -70,6 +70,16 @@ export default function Wishlist({ user }) {
     return stars;
   };
 
+  const parseImages = (images) => {
+  try {
+    const parsed = JSON.parse(images);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+
   return (
     <div
       className="min-vh-100 position-relative"
@@ -134,7 +144,11 @@ export default function Wishlist({ user }) {
                       {/* Product Image */}
                       <div className="position-relative">
                         <img
-                          src={`${baseAPI}${"/placeholder.jpg"}`}
+                          src={
+                              parseImages(item.images)[0]
+                                ? `${baseAPI}${parseImages(item.images)[0]}`
+                                : "/placeholder.jpg"
+                            }
                           alt={item.name}
                           className="card-img-top"
                           style={{
