@@ -322,13 +322,15 @@ export default function ProductCard({ product, onAdd, onWishlist }) {
                             className="progress-bar bg-warning"
                             style={{
                               width: `${
-                                product.rating_breakdown?.[star]?.count 
+                                product.rating_breakdown?.[star]?.length
+                ? (product.rating_breakdown[star].length / product.review_count) * 100
+                : 0 
                               }%`,
                             }}
                           ></div>
                         </div>
                         <span>
-                          {product.rating_breakdown?.[star]?.count }
+                          {product.rating_breakdown?.[star]?.count||5 }
                         </span>
                       </div>
                     ))}
