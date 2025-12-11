@@ -197,23 +197,7 @@ export default function ProductCard({ product, onAdd, onWishlist }) {
       </div>
 
       {/* FULL DESCRIPTION MODAL */}
-      <style>
-      {`
-        @media (max-width: 576px) {
-          .mobile-fullscreen {
-            width: 100% !important;
-            height: 100% !important;
-            margin: 0 !important;
-            max-width: 100% !important;
-          }
-
-          .mobile-fullscreen .modal-content {
-            height: 100% !important;
-            border-radius: 0 !important;
-          }
-        }
-      `}
-      </style>
+     
       {showModal && (
         <div
           className="modal fade show d-block"
