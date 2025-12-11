@@ -330,7 +330,7 @@ export default function ProductCard({ product, onAdd, onWishlist }) {
                           ></div>
                         </div>
                         <span>
-                          {product.rating_breakdown?.[star]?.count||5 }
+                          {product.rating_breakdown?.[star]?.count||0 }
                         </span>
                       </div>
                     ))}
