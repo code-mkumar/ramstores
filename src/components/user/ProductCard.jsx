@@ -330,7 +330,7 @@ export default function ProductCard({ product, onAdd, onWishlist }) {
                           ></div>
                         </div>
                         <span>
-                          {product.rating_breakdown?.[star]?.count||0 }
+                          (product.rating_breakdown[star].length / product.review_count) * 100
                         </span>
                       </div>
                     ))}
