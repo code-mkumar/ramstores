@@ -314,24 +314,27 @@ export default function ProductCard({ product, onAdd, onWishlist }) {
 
                   {/* Rating Breakdown (Bars) */}
                   <div className="mt-3">
-                  {[5, 4, 3, 2, 1].map((star) => {
-                    const count = product.rating_breakdown?.[star]?.length || 0;
-                    const percentage =
-                      product.review_count > 0 ? (count / product.review_count) * 100 : 0;
-                    return (
+                    {[5, 4, 3, 2, 1].map((star) => (
                       <div key={star} className="d-flex align-items-center mb-1">
                         <span style={{ width: "30px" }}>{star}⭐</span>
                         <div className="progress flex-grow-1 mx-2" style={{ height: "8px" }}>
                           <div
                             className="progress-bar bg-warning"
-                            style={{ width: `${percentage}%` }}
+                            style={{
+                              width: `${
+                                product.rating_breakdown?.[star]?.length
+                ? (product.rating_breakdown[star].length / product.review_count) * 100
+                : 0 
+                              }%`,
+                            }}
                           ></div>
                         </div>
-                        <span>{count}</span>
+                        <span>
+                          (product.rating_breakdown[star].length / product.review_count) * 100
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
+                    ))}
+                  </div>
 
                   {/* Latest Review */}
                   {product.ratings?.length > 0 ? (
