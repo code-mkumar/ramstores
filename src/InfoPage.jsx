@@ -21,6 +21,7 @@ export default function InfoPage() {
     const loadData = async () => {
       try {
         const car = await API.get("/carousel");
+        console.log(car);
         setCarousel(car.data.data || []);
       
 
