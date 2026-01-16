@@ -105,7 +105,7 @@ export default function UserHeader({
               letterSpacing: "2px"
             }}
           >
-            RAM STORES
+            Grocery Shop
           </h2>
         </div>
 

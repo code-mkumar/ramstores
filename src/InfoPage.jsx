@@ -16,7 +16,21 @@ export default function InfoPage() {
 
 
 
-  
+  const [feedback, setFeedback] = useState("");
+
+  const sendMail = () => {
+    if (!feedback.trim()) {
+      alert("Please write feedback first");
+      return;
+    }
+
+    const email = "support@yourdomain.com"; // 👈 change this
+    const subject = "Customer Feedback";
+    const body = encodeURIComponent(feedback);
+
+    window.location.href = `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${body}`;
+  };
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -235,6 +249,12 @@ export default function InfoPage() {
       borderRadius: "20px",
       background: "rgba(255,255,255,0.9)",
     }}
+    onClick={() => {
+    document.getElementById("categories")?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }}
   >
     <h2 className="fw-bold mb-4" style={{ color: "#2d3748" }}>
       Categories
@@ -430,24 +450,29 @@ export default function InfoPage() {
                 <p><Phone size={20} /> +91 98765 43210</p>
                 <p><Mail size={20} /> support@grocery.com</p>
 
-                <textarea
-                  className="form-control mt-3"
-                  rows="4"
-                  placeholder="Write your feedback..."
-                  style={{
-                    borderRadius: "12px",
-                    background: "#edf2f7",
-                    border: "none"
-                  }}
-                />
-                <button className="btn w-100 mt-3 text-white"
-                  style={{
-                    borderRadius: "12px",
-                    background: "linear-gradient(135deg,#667eea,#764ba2)"
-                  }}
-                >
-                  Submit Feedback
-                </button>
+               <textarea
+                className="form-control mt-3"
+                rows="4"
+                placeholder="Write your feedback..."
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                style={{
+                  borderRadius: "12px",
+                  background: "#edf2f7",
+                  border: "none",
+                }}
+              />
+
+              <button
+                className="btn w-100 mt-3 text-white"
+                style={{
+                  borderRadius: "12px",
+                  background: "linear-gradient(135deg,#667eea,#764ba2)",
+                }}
+                onClick={sendMail}
+              >
+                Submit Feedback
+              </button>
               </div>
 
               {/* MAP */}
